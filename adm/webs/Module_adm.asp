@@ -21,26 +21,31 @@
 <script type="text/javascript" src="/js/jquery.js"></script>
 <script type="text/javascript" src="/general.js"></script>
 <script type="text/javascript" src="/switcherplugin/jquery.iphone-switch.js"></script>
-<script type="text/javascript" src="/dbconf?p=adm_&v=<% uptime(); %>"></script>
+<script type="text/javascript" src="/dbconf?p=adm&v=<% uptime(); %>"></script>
+<script type="text/javascript" src="/dbconf?p=koolproxy_enable&v=<% uptime(); %>"></script>
 <script type="text/javascript" src="/res/softcenter.js"></script>
 <script language="JavaScript" type="text/javascript" src="/client_function.js"></script>
-
-
 <script>
+var $j = jQuery.noConflict();
+var $G = function(id){return document.getElementById(id);};
 function init() {
 	show_menu();
-	//line_show();
+	get_status();
 	buildswitch();
     version_show();
     setTimeout("version_show()", 3000);
-    /*
-    var ss_mode = '<% nvram_get("ss_mode"); %>';
-	if(ss_mode != "0" && ss_mode != 'undefined'){
-		$j("#warn").html("<i>你开启了shadowsocks, 阿呆喵将只过滤国内广告</i>");
+	conf2obj();
+    var kp_enable = db_koolproxy_enable["koolproxy_enable"];
+	if(kp_enable == "1"){
+		$j("#warn").html("<i>警告：你开启了koolprxoy, 阿呆喵无法启用</i>");
+		document.form.adm_enable.value = 0;
+		inputCtrl(document.form.switch,0);
 	}else{
-		$j("#warn").html("<i>阿呆喵将过滤全部广告</i>");
+		$j("#warn").html("");
 	}
-    */
+}
+
+function conf2obj(){
     var rrt = document.getElementById("switch");
     if (document.form.adm_enable.value != "1") {
         rrt.checked = false;
@@ -48,95 +53,76 @@ function init() {
         rrt.checked = true;
     }
 }
-/*
-function line_show() {
-	if(typeof db_adm_ != "undefined") {
-		for(var field in db_adm_) {
-			var el = document.getElementById(field);
-				if(el != null) {
-				el.value = db_adm_[field];
-			}
-			var temp_ss = ["adm_user_txt"];
-			for (var i = 0; i < temp_ss.length; i++) {
-				temp_str = $G(temp_ss[i]).value;
-				$G(temp_ss[i]).value = temp_str.replaceAll(",","\n");
-			}
-		}
-	}
-}
 
-function validForm(){
-	var temp_ss = ["adm_user_txt"];
-	for(var i = 0; i < temp_ss.length; i++) {
-		var temp_str = $G(temp_ss[i]).value;
-		if(temp_str == "") {
-			continue;
-		}
-		var lines = temp_str.split("\n");
-		var rlt = "";
-		for(var j = 0; j < lines.length; j++) {
-			var nstr = lines[j].trim();
-			if(nstr != "") {
-				rlt = rlt + nstr + ",";
-			}
-		}
-		if(rlt.length > 0) {
-			rlt = rlt.substring(0, rlt.length-1);
-		}
-		if(rlt.length > 10000) {
-			alert(temp_ss[i] + " 不能超过10000个字符");
-			return false;
-		}
-		$G(temp_ss[i]).value = rlt;
-		
-	}	
-	return true;
+function get_status() {
+    $j.ajax({
+        url: 'apply.cgi?current_page=Module_adm.asp&next_page=Module_adm.asp&group_id=&modified=0&action_mode=+Refresh+&action_script=&action_wait=&first_time=&preferred_lang=CN&SystemCmd=adm_status.sh&firmver=3.0.0.4',
+        dataType: 'html',
+        error: function(xhr) {
+	        alert("error");
+	        },
+        success: function(response) {
+    		checkCmdRet2();
+        	}
+    });
 }
-*/
+var _responseLen;
+var noChange = 0;
+function checkCmdRet2(){
+	$j.ajax({
+		url: '/res/adm_check.htm',
+		dataType: 'html',
+		
+		error: function(xhr){
+			setTimeout("checkCmdRet2();", 1000);
+		},
+		success: function(response){
+			var _cmdBtn = document.getElementById("cmdBtn");
+			if(response.search("XU6J03M6") != -1){
+				adm_status = response.replace("XU6J03M6", " ");
+				document.getElementById("status").innerHTML = adm_status;
+				setTimeout("get_status();", 2000);
+				return true;
+			}
+			
+			if(_responseLen == response.length){
+				noChange++;
+			}else{
+				noChange = 0;
+			}
+
+			if(noChange > 100){
+				noChange = 0;
+				refreshpage();
+			}else{
+				setTimeout("checkCmdRet2();", 400);
+			}
+			_responseLen = response.length;
+			
+		}
+	});
+}
 
 function buildswitch(){
 	$j("#switch").click(
 	function(){
 		if(document.getElementById('switch').checked){
 			document.form.adm_enable.value = 1;
-			//document.getElementById('adm_enable').value = 1;
 			
 		}else{
 			document.form.adm_enable.value = 0;
-			//document.getElementById('adm_enable').value = 0;
 		}
 	});
 }
 
 function onSubmitCtrl(o, s) {
-	//if(validForm()){
-		document.form.action_mode.value = s;
-		showLoading(7);
-		document.form.submit();
-	//}
+	document.form.action_mode.value = s;
+	showLoading(15);
+	document.form.submit();
 }
-
-function conf2obj(){
-	$j.ajax({
-	type: "get",
-	url: "dbconf?p=adm_",
-	dataType: "script",
-	success: function(xhr) {
-    var p = "adm_";
-        var params = ["user_txt"];
-        for (var i = 0; i < params.length; i++) {
-			if (typeof db_adm_[p + params[i]] !== "undefined") {
-				$j("#adm_"+params[i]).val(db_adm_[p + params[i]]);
-			}
-        }
-	}
-	});
-}
-
-
 
 function version_show(){
-	$j("#adm_version_status").html("<i>当前版本：" + db_adm_['adm_version']);
+	$j("#adm_version_status").html("<i>当前插件版本：" + db_adm['adm_version']);
 
     $j.ajax({
         url: 'https://raw.githubusercontent.com/koolshare/koolshare.github.io/acelan_softcenter_ui/adm/config.json.js',
@@ -146,9 +132,9 @@ function version_show(){
             if(typeof(txt) != "undefined" && txt.length > 0) {
                 //console.log(txt);
                 var obj = $j.parseJSON(txt.replace("'", "\""));
-		$j("#adm_version_status").html("<i>当前版本：" + obj.version);
-		if(obj.version != db_adm_["adm_version"]) {
-			$j("#adm_version_status").html("<i>有新版本：" + obj.version);
+		$j("#adm_version_status").html("<i>当前插件版本：" + obj.version);
+		if(obj.version != db_adm["adm_version"]) {
+			$j("#adm_version_status").html("<i>插件有新版本：" + obj.version);
 		}
             }
         }
@@ -193,19 +179,10 @@ location.href = "/Main_Soft_center.asp";
 								<tr>
 									<td bgcolor="#4D595D" colspan="3" valign="top">
 										<div>&nbsp;</div>
-										<div style="float:left;" class="formfonttitle">ADM 喵~</div>
+										<div style="float:left;" class="formfonttitle">ADM 阿呆猫</div>
 										<div style="float:right; width:15px; height:25px;margin-top:10px"><img id="return_btn" onclick="reload_Soft_Center();" align="right" style="cursor:pointer;position:absolute;margin-left:-30px;margin-top:-25px;" title="返回软件中心" src="/images/backprev.png" onMouseOver="this.src='/images/backprevclick.png'" onMouseOut="this.src='/images/backprev.png'"></img></div>
 										<div style="margin-left:5px;margin-top:10px;margin-bottom:10px"><img src="/images/New_ui/export/line_export.png"></div>
-										<div class="formfontdesc" style="padding-top:5px;margin-top:0px;float: left;" id="cmdDesc">使用ADM，你就知道，去广告，原来是如此简单</div>
-										<div id="adm_version_status" style="padding-top:5px;margin-left:30px;margin-top:0px;float: left;"><i>当前版本：<% dbus_get_def("adm_version", "0"); %></i></div>
-										<div style="padding-top:5px;margin-top:0px;float: left;" id="NoteBox" >
-											<li>由于adm(阿呆猫)路由器版本性能问题，导致可能会出现卡网，因此我们对广告过滤做了限制：<i>adm将专注过滤视频广告;</i> </li>
-											<li>注意：即使专注过滤视频广告，如果你的client过多，ADM也可能出现卡网，这是ADM本身的一些问题，目前我们尚不能解决; </li>
-											<li>如果你需要过滤更多广告，可以编辑<i>/koolshare/adm/adblock.conf</i>添加你要过滤的网站; </li>
-											<li>如果突然发现视频广告不能过滤了，不要惊慌，手动重启下吧！ </li>
-										</div>
-																	
-										<div class="formfontdesc" id="cmdDesc"></div>
+										<div class="formfontdesc" id="cmdDesc"><i>当前插件版本：<% dbus_get_def("adm_version", "0"); %></i>&nbsp;&nbsp;&nbsp;&nbsp;<i>当前adm版本：2.5</i></div>
 										<table style="margin:10px 0px 0px 0px;" width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" id="routing_table">
 											<thead>
 											<tr>
@@ -231,53 +208,20 @@ location.href = "/Main_Soft_center.asp";
 													<div id="adm_install_show" style="padding-top:5px;margin-left:80px;margin-top:-30px;float: left;"></div>	
 												</td>
 											</tr>
-											<!--
 											<tr id="adm_status">
-												<th>
-													<label>ADM状态</label>
-												</th>
-												<td>
- 													<div id="warn" style="margin-top: 20px;text-align: center;font-size: 18px;margin-bottom: 20px;"class="formfontdesc" id="cmdDesc"></div>
-												</td>										
+												<th>adm运行状态</th>
+												<td><span id="status"></span></td>
 											</tr>
-											<tr id="adm_user">
-												<td style="background-color: #2F3A3E;width:15%;">
-													<label>自定义过滤规则</label>
-												</td>
-												</th>
-												<td>
-													<textarea placeholder='[ADM]
-!  ------------------------------ 阿呆喵[ADM] 自定义过滤语法简表---------------------------------
-!  --------------  规则基于ABP规则，并进行了字符替换部分的扩展-----------------------------
-!  ABP规则请参考https://adblockplus.org/zh_CN/filters，下面为大致摘要
-!  "!" 为行注释符，注释行以该符号起始作为一行注释语义，用于规则描述
-!  "*" 为字符通配符，能够匹配0长度或任意长度的字符串，该通配符不能与正则语法混用。
-!  "^" 为分隔符，可以匹配除了字母、数字或者 _ - . % 之外的任何字符。
-!  "|" 为管线符号，来表示地址的最前端或最末端  比如 "|http://"  或  |http://www.abc.com/a.js|  
-!  "||" 为子域通配符，方便匹配主域名下的所有子域。比如 "||www.baidu.com"  就可以不要前面的 "http://"
-!  "~" 为排除标识符，通配符能过滤大多数广告，但同时存在误杀, 可以通过排除标识符修正误杀链接。
-
-! ## #@# ##&  这3种为元素插入语法 (在语句末尾加 $B , 可以选择插入css语句在</body>前, 默认为</head>)
-!  "##" 为元素选择器标识符，后面跟需要隐藏元素的CSS样式例如 #ad_id  .ad_class
-! "#@#" 元素选择器白名单 
-! "##&" 为JQuery选择器标识符，后面跟需要隐藏元素的JQuery筛选语法
-!  元素隐藏支持全局规则   ##.ad_text  不需要前面配置域名,对所有页面有效. 误杀会比较多, 慎用.
-
-!  文本替换选择器标识符, 支持通配符*和？，格式："页面C$s@内容A@内容B@"   意思为 <在使用"某正则模式" 在 "页面C"上用"内容A"替换"内容B" >  ; 
-! 文本替换方式1:  S@   使用正则匹配替换
-! 文本替换方式2:  s@   使用通配符 ?  *  匹配替换
-!  -------------------------------------------------------------------------------------------
-
-!新增规则语法测试样例
-
-!样例1 使用正则删除某地方(替换 "<p...</p>" 字符串为 "http://www.admflt.com")
-!<p id="lg"><img src="http://www.baidu.com/img/bdlogo.gif" width="270" height="129"></p>
-!||www.baidu.com$S@<p.*<\/p>@http://www.admflt.com@
-!||kafan.cn$s@<div id="hd">@<div id="hd" style="display:none!important">@' cols="50" rows="20" id="adm_user_txt" name="adm_user_txt" style="width:99%; font-family:'Courier New', 'Courier', 'mono'; font-size:12px;background:#475A5F;color:#FFFFFF;"></textarea>
-												</td>
-											</tr>
-											-->
                                     	</table>
+                                    	<div id="warn"></div>
+										<div id="adm_note">
+										<div><i>1&nbsp;&nbsp;adm 2.5支持https过滤，你需要修改/koolshare/adm/ADMConfig.ini文件，然后重启adm，才能正常使用</div>
+										<div><i>2&nbsp;&nbsp;启用https功能后，你还需要手动运行<font color='#66FF00'>cd /koolshare/adm && ./adm /ssl rsa</font>生成证书。</i></div>
+										<div><i>3&nbsp;&nbsp;证书生成后，需要拷贝路由器内<font color='#66FF00'>/koolshare/adm/adm_ca.crt</font>文件到你的设备，然后安装证书。</div>
+										<div><i>4&nbsp;&nbsp;adm在运行时，打开网页等操作会生成很多子进程，会对路由器造成很大的负担，可以通过运行状态一栏看到进程数量。</i></div>
+										<div><i>5&nbsp;&nbsp;请注意，adm和koolproxy不能同时运行！</i></div>
+										<div><i>6&nbsp;&nbsp;adm运行的稳定与否与本插件和merlin改版固件无关，如有任何问题，请向adm方面反馈！</i></div>
+										</div>
 										<div class="apply_gen">
 											<button id="cmdBtn" class="button_gen" onclick="onSubmitCtrl(this, ' Refresh ')">提交</button>
 										</div>

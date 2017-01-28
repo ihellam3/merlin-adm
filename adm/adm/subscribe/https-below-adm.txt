@@ -5,7 +5,7 @@
 !  --------  By-Mr.Yan
 !  Homepage: http://update2.admflt.com/https_ruler/https-below-adm.txt
 !  --------------------------------------------------------------------------------------------
-||ad.12306.cn
+|http://*/main/s?user=AllyesNetwork|TppAd|*
 ! ------------------------------------------------------
 !https://www.youtube.com/
 ||www.youtube.com/ad_frame?*
@@ -43,6 +43,7 @@ youtube.com##.searchView.list-view
 youtube.com##.watch-extra-info-column
 youtube.com##.watch-extra-info-right
 youtube.com##div.ytp-iv-video-content
+youtube.com##div#feed-pyv-container
 youtube.com##a[href^="http://www.youtube.com/cthru?"]
 youtube.com##a[href^="https://www.youtube.com/cthru?"]
 m.youtube.com##a[onclick*="\"ping_url\":\"http://www.google.com/aclk?"]
@@ -57,7 +58,8 @@ m.youtube.com##a[onclick*="\"ping_url\":\"http://www.google.com/aclk?"]
 www.youtube.com###movie_player > .iv-promo-video.iv-promo.annotation-type-custom.annotation
 www.youtube.com###movie_player > .html5-video-content > .iv-module.video-annotations
 www.youtube.com###movie_player > .iv-drawer
-
+||.ytimg.com/yts/jsbin/www-search-ads-*/www-search-ads.js
+||.ytimg.com/yts/jsbin/www-*/feed.js
 !https://www.facebook.com/
 facebook.com##[id^="PageAdsPagelet"]
 facebook.com##.ego_unit_container>[data-ad]
@@ -96,14 +98,10 @@ facebook.com##div[id^="sponsoredTickerStory_"]
 ||platform.twitter.com/widgets.js$script
 twitter.com##.is-promoted,.promoted-account,.promoted-trend,.promoted-tweet,.promotion,[label="promoted"]
 
-
 ||a.kat.cr/adx.*
 ||.google.com/pagead/
-||ad-*.doubleclick.net/
-||ad.doubleclick.net/*
 ||.adap.tv/$third-party
 ||.teads.tv/$third-party
-||.doubleclick.net/$third-party
 ||ad.turn.com/$third-party
 ||loadm.exelator.com/$third-party
 ||secure.adnxs.com/$third-party
@@ -114,7 +112,6 @@ twitter.com##.is-promoted,.promoted-account,.promoted-trend,.promoted-tweet,.pro
 ||rad.reporo.net/$third-party
 ||.google-analytics.com/$third-party
 ||player.005.tv:60000/ad.*
-||hm.baidu.com/hm.js?
 ||i.supfree.net/*.js$script
 ||www.google.com/uds/api/ads/
 ||*/template/default/ads/*.js$script
@@ -125,14 +122,12 @@ twitter.com##.is-promoted,.promoted-account,.promoted-trend,.promoted-tweet,.pro
 ||projectwonderful.com/active.php?*&adboxid=
 ||s.ssl.qhimg.com/static/*/MMPlugin.js$script
 ||syndication.exoclick.com/ads-iframe-display.php?
-|http://*/main/s?user=AllyesNetwork|TppAd|*
-
-!google
 google.com###ad-target,.id-ad-target.ads-300-250,#ad-label,.id-ad-label,#ad
+cnbeta.com##&div[style*="display:block !important"][style*="z-index:99999"]
+||www.cnbeta.com/articles/*.htm$s@JB=function(){if(*;}})};@@p
 www.google.*##.commercial-unit-desktop-top,#resultspanel > #topads,#ssmiwdiv[jsdisplay],#tads + div + .c,#tads.c,#tadsb.c,#tadsto.c,#topstuff > #tads,.ch[onclick="ga(this,event)"],.commercial-unit-desktop-rhs
 mail.google.com##.aeF > .nH > .nH[role="main"] > .aKB
 www.google.*##&.ads-ad,div#bottomads,div#tadsb
-
 !yahoo.com
 ||ads.yahoo.com
 ||s^.2mdn.net/ads/*
@@ -142,10 +137,14 @@ www.google.*##&.ads-ad,div#bottomads,div#tadsb
 ||syndication.streamads.yahoo.com/
 ||.yimg.com/uq/syndication/yad-iframe*.html
 ||bs.serving-sys.com/BurstingPipe/adServer.bs?*
-||.yimg.com/rq/darla/*.html$domain=yahoo.com
 ||.yimg.com/ja/ap/*/RichGutter_^_edge.js$SCRIPT
 search.yahoo.com###main > div > style + ol
-.yahoo.com##.rmx-ad,.ad-tl1,#ad-north-base,#ad-north,#ad,#my-adsFPAD,#my-adsFPL,#my-adsFPT,#fpad2,.yom-ad,div#my-adsMAST,div.darla-ad,div#TopAd,div[id^="dmRosAdWrapper-"],div#ya-darla-LREC
+yahoo.com##&.rmx-ad,.ad-tl1,#ad-north-base,#ad-north,#ad,div[id^="my-ads"],.js-stream-featured-ad,div.tabads,#fpad2,.yom-ad,div.darla-ad,div#TopAd,div[id^="dmRosAdWrapper-"]
+||.yahoo.com/ConvergeMonkey?adId=
 
-
+!对啊网视频播放需要
+@@|http://www.duia.com/resources/common/js/tongji.js
+!贴吧
+tieba.baidu.com/p/#@#div[data-isautoreply]
+tieba.baidu.com##div[class="tpoint-skin"]
 !----------------------------------------遇到情况请反馈--------------------------------------------------

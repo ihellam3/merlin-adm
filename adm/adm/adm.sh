@@ -1,13 +1,8 @@
 #!/bin/sh
 
-# ====================================变量定义====================================
-# 版本号定义
 version="1.6"
-
-# 导入skipd数据
 eval `dbus export adm`
 eval `dbus export ss_basic`
-
 # 引用环境变量等
 source /koolshare/scripts/base.sh
 export PERP_BASE=/koolshare/perp
@@ -31,56 +26,46 @@ remove_ss_event(){
 
 # 启动ADM主程序
 start_adm(){
-#	/koolshare/adm/ADM >/dev/null 2>&1 &
-	perpctl A adm  >/dev/null 2>&1
+	/koolshare/adm/adm >/dev/null 2>&1 &
+	#perpctl A adm  >/dev/null 2>&1
 }
 
 # 停止ADM主程序
 stop_adm(){
-	perpctl X adm  >/dev/null 2>&1
+	#perpctl X adm  >/dev/null 2>&1
 	#killall ADM >/dev/null 2>&1 &
-	kill -9 `pidof ADM` >/dev/null 2>&1 &
-}
-
-# 添加进程守护
-add_process_protect(){
-	sh /koolshare/perp/perp.sh start
-}
-
-# 删除进程守护
-del_process_protect(){
-	sh /koolshare/perp/perp.sh stop
+	kill -9 `pidof adm` >/dev/null 2>&1 &
 }
 
 # 更新nat规则（兼容SS）
 update_nat_rules(){
 	ipset -N adblock iphash
 	ipset --add adblock 188.188.188.188
-	ln -sf /koolshare/adm/adblock.conf /jffs/configs/dnsmasq.d/adblock.conf
+	#ln -sf /koolshare/adm/adblock.conf /jffs/configs/dnsmasq.d/adblock.conf
 	if [ "$ssmode" == "1" ] || [ "$ssmode" == "3" ] || [ "$ssmode" == "4" ] || [ "$ssmode" == "5" ] ;then
 		# 当ss模式为gfwlist模式，游戏模式，游戏模式V2，全局模式时，应用此规则
-		# iptables -t nat -A SHADOWSOCKS -p tcp --dport 80 -j REDIRECT --to-ports 18309
-		iptables -t nat -A SHADOWSOCKS -p tcp --dport 80 -m set --match-set adblock dst -j REDIRECT --to-ports 18309
+		iptables -t nat -A SHADOWSOCKS -p tcp -m multiport --dports 80,443 -j REDIRECT --to-ports 18309
+		#iptables -t nat -A SHADOWSOCKS -p tcp --dport 80 -m set --match-set adblock dst -j REDIRECT --to-ports 18309
 	elif [ "$ssmode" == "2" ];then
 		# 当ss模式为大陆白名单模式时，应用此规则
-    	# iptables -t nat -A REDSOCKS2 -p tcp --dport 80 -j REDIRECT --to-ports 18309
-    	iptables -t nat -A REDSOCKS2 -p tcp --dport 80 -m set --match-set adblock dst -j REDIRECT --to-ports 18309
+    	iptables -t nat -A SHADOWSOCKS -p tcp -m multiport --dports 80,443 -j REDIRECT --to-ports 18309
+    	#iptables -t nat -A SHADOWSOCKS -p tcp --dport 80 -m set --match-set adblock dst -j REDIRECT --to-ports 18309
     else
     	# 不启用ss时，新建ADM规则
 		# Create a new chain named ADM
 		iptables -t nat -N ADM
 		# Ignore LANs IP address
-		iptables -t nat -A ADM -p tcp --dport 80 -d 0.0.0.0/8 -j RETURN
-		iptables -t nat -A ADM -p tcp --dport 80 -d 127.0.0.0/8 -j RETURN
-		iptables -t nat -A ADM -p tcp --dport 80 -d 10.0.0.0/8 -j RETURN
-		iptables -t nat -A ADM -p tcp --dport 80 -d 172.16.0.0/12 -j RETURN
-		iptables -t nat -A ADM -p tcp --dport 80 -d 192.168.0.0/16 -j RETURN
-		iptables -t nat -A ADM -p tcp --dport 80 -d 224.0.0.0/4 -j RETURN
-		iptables -t nat -A ADM -p tcp --dport 80 -d 240.0.0.0/4 -j RETURN
-		iptables -t nat -A ADM -p tcp --dport 80 -d 169.254.0.0/16 -j RETURN
+		iptables -t nat -A ADM -p tcp -d 0.0.0.0/8 -j RETURN
+		iptables -t nat -A ADM -p tcp -d 127.0.0.0/8 -j RETURN
+		iptables -t nat -A ADM -p tcp -d 10.0.0.0/8 -j RETURN
+		iptables -t nat -A ADM -p tcp -d 172.16.0.0/12 -j RETURN
+		iptables -t nat -A ADM -p tcp -d 192.168.0.0/16 -j RETURN
+		iptables -t nat -A ADM -p tcp -d 224.0.0.0/4 -j RETURN
+		iptables -t nat -A ADM -p tcp -d 240.0.0.0/4 -j RETURN
+		iptables -t nat -A ADM -p tcp -d 169.254.0.0/16 -j RETURN
 		# Anything else should be redirected to ADM local port
-		# iptables -t nat -A ADM -p tcp --dport 80 -j REDIRECT --to-ports 18309
-		iptables -t nat -A ADM -p tcp --dport 80 -m set --match-set adblock dst -j REDIRECT --to-ports 18309
+		iptables -t nat -A ADM -p tcp -m multiport --dports 80,443 -j REDIRECT --to-ports 18309
+		#iptables -t nat -A ADM -p tcp --dport 80 -m set --match-set adblock dst -j REDIRECT --to-ports 18309
 		# Apply the rules
 		iptables -t nat -A PREROUTING -p tcp -j ADM
 	fi
@@ -88,13 +73,11 @@ update_nat_rules(){
 
 # 去除去广告nat规则
 remove_nat_rules(){
-		rm -rf /jffs/configs/dnsmasq.d/adblock.conf
-		# iptables -t nat -D SHADOWSOCKS -p tcp --dport 80 -j REDIRECT --to-ports 18309 >/dev/null 2>&1
-    	# iptables -t nat -D REDSOCKS2 -p tcp --dport 80 -j REDIRECT --to-ports 18309 >/dev/null 2>&1
-		# iptables -t nat -D PREROUTING -p tcp -j ADM >/dev/null 2>&1
-		iptables -t nat -D SHADOWSOCKS -p tcp --dport 80 -m set --match-set adblock dst -j REDIRECT --to-ports 18309 >/dev/null 2>&1
-		iptables -t nat -D REDSOCKS2 -p tcp --dport 80 -m set --match-set adblock dst -j REDIRECT --to-ports 18309 >/dev/null 2>&1
-		iptables -t nat -D ADM -p tcp --dport 80 -m set --match-set adblock dst -j REDIRECT --to-ports 18309 >/dev/null 2>&1
+		#rm -rf /jffs/configs/dnsmasq.d/adblock.conf
+		iptables -t nat -D SHADOWSOCKS -p tcp -m multiport --dports 80,443 -j REDIRECT --to-ports 18309 >/dev/null 2>&1
+		iptables -t nat -D PREROUTING -p tcp -j ADM >/dev/null 2>&1
+		#iptables -t nat -D SHADOWSOCKS -p tcp --dport 80 -m set --match-set adblock dst -j REDIRECT --to-ports 18309 >/dev/null 2>&1
+		#iptables -t nat -D ADM -p tcp --dport 80 -m set --match-set adblock dst -j REDIRECT --to-ports 18309 >/dev/null 2>&1
 		iptables -t nat -F ADM >/dev/null 2>&1
 		iptables -t nat -X ADM >/dev/null 2>&1
 		ipset -F adblock >/dev/null 2>&1
@@ -144,7 +127,6 @@ start)
 	if [ "$adm_enable" == "1" ] && [ "$ss_basic_enable" == "0" ];then
 		logger "[软件中心]: 启动ADM！"
 		set_ulimit
-		add_process_protect
 		start_adm
 		update_nat_rules
 		add_ss_event
@@ -156,7 +138,6 @@ start)
 	;;
 stop | kill )
 	remove_nat_rules
-	del_process_protect
 	stop_adm
 	remove_ss_event
 	del_user_rule
@@ -165,7 +146,6 @@ stop | kill )
 restart)
 	remove_nat_rules
 	del_user_rule
-	del_process_protect
 	stop_adm
 	remove_ss_event
 	remove_log
@@ -173,7 +153,6 @@ restart)
 	sleep 1
 	set_ulimit
 	add_user_rule
-	add_process_protect
 	start_adm
 	update_nat_rules
 	service start_dnsmasq
